@@ -57,7 +57,13 @@ func createNewLexem(parent PLexem, text uint64, _type TLexemType) PLexem {
 	return L
 }
 
-func BuildLexems(text memfs.PBigByteArray, size uint64) PLexem {
+// Error codes
+const (
+	errNoSuccess = iota
+	errNoUnterminatedString
+)
+
+func BuildLexems(text memfs.PBigByteArray, size uint64) (lexem PLexem, errorCode uint, errorIndex uint64) {
 	var idx uint64 = 1
 	var C uint16
 	var curLexem, firstLexem PLexem
@@ -76,7 +82,7 @@ func BuildLexems(text memfs.PBigByteArray, size uint64) PLexem {
 	curLexem = new(TLexem)
 	firstLexem = curLexem
 
-	for idx < size {
+	for idx <= size {
 		C = T[idx]
 		switch {
 		case isIdentLetter(C):
@@ -100,7 +106,27 @@ func BuildLexems(text memfs.PBigByteArray, size uint64) PLexem {
 				}
 				curLexem.Size = int(idx - startIdx)
 			}
-			
+
+		case C == '"':
+			{
+				startIdx = idx
+				idx++
+				if idx > size {
+					return firstLexem, errNoUnterminatedString, startIdx
+				}
+				for idx <= size && T[idx] != '"' {
+					idx++
+				}
+				if idx > size {
+					return firstLexem, errNoUnterminatedString, startIdx
+				}
+
+				startIdx++
+				curLexem = createNewLexem(curLexem, addrOfText+startIdx*2, ltString)
+				curLexem.Size = int(idx - startIdx)
+				idx++
+			}
+
 		default:
 			idx++
 		}
@@ -108,5 +134,5 @@ func BuildLexems(text memfs.PBigByteArray, size uint64) PLexem {
 
 	createNewLexem(curLexem, 0, ltEOF)
 
-	return firstLexem
+	return firstLexem, errNoSuccess, 0
 }

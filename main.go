@@ -23,7 +23,7 @@ func main() {
 	}
 	
 	p := mapIntf.BaseAddress()
-	lexem := BuildLexems(p, mapIntf.GetSize())
+	lexem, errorCode, errorIndex := BuildLexems(p, mapIntf.GetSize())
 
 	L := lexem
 	for L != nil {
@@ -38,6 +38,10 @@ func main() {
 		fmt.Println()
 	}
 	
+	if errorCode != 0 {
+		fmt.Printf("Ошибка %d в %d\n", errorCode, errorIndex)
+	}
+
 	mapIntf.Munmap()
 	mapIntf = nil
 }
