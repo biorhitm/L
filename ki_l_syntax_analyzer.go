@@ -19,6 +19,7 @@ const (
 	ltChar         // 'a' 'x' '%'
 	ltSymbol       // ! @ # $ % ^ & * () - + = [] {} и т.д.
 	ltIdent        // имя функции, переменной или типа
+	ltEOL
 	ltReservedWord //функция, конец, если и т.д.
 )
 
@@ -149,6 +150,12 @@ func BuildLexems(text memfs.PBigByteArray, size uint64) (lexem PLexem, errorCode
 			{
 				curLexem = createNewLexem(curLexem, addrOfText+idx*2, ltSymbol)
 				curLexem.Size = 1
+				idx++
+			}
+
+		case C == 0x0A:
+			{
+				curLexem = createNewLexem(curLexem, addrOfText+idx*2, ltEOL)
 				idx++
 			}
 

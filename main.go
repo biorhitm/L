@@ -1,10 +1,9 @@
 package main
 
 import (
-	"github.com/biorhitm/memfs"
 	"fmt"
+	"github.com/biorhitm/memfs"
 	"syscall"
-	//"unsafe"
 )
 
 /*
@@ -21,23 +20,37 @@ func main() {
 		fmt.Printf("error: %s\n", err.Error())
 		return
 	}
-	
+
 	p := mapIntf.BaseAddress()
 	lexem, errorCode, errorIndex := BuildLexems(p, mapIntf.GetSize())
 
 	L := lexem
-	for L != nil {
-		b := make([]uint16, L.Size)
-		for i := 0; i < L.Size; i++ {
-			b[i] = L.Text[i]
-		}
-		S := syscall.UTF16ToString(b)
+	var prevLexemType TLexemType = ltUnknown
 
-		fmt.Printf("Лехема: type: %d size: %d %s", L.Type, L.Size, S)
+	for L != nil {
+		var S string
+		if L.Size > 0 {
+			b := make([]uint16, L.Size)
+			for i := 0; i < L.Size; i++ {
+				b[i] = L.Text[i]
+			}
+			S = syscall.UTF16ToString(b)
+			if prevLexemType != ltUnknown && prevLexemType != ltEOL {
+				//fmt.Printf(" ")
+			}
+			fmt.Printf("Лехема: %d size: %d %s ", L.Type, L.Size, S)
+		}
+
+		if L.Type == ltEOL {
+			fmt.Printf(" \\n\n")
+		}
+
+		prevLexemType = L.Type
 		L = L.Next
-		fmt.Println()
 	}
-	
+
+	fmt.Printf("----------EOF-----------\n")
+
 	if errorCode != 0 {
 		fmt.Printf("Ошибка %d в %d\n", errorCode, errorIndex)
 	}
