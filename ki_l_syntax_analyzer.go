@@ -1,8 +1,8 @@
 package main
 
 import (
-	"unsafe"
 	"github.com/biorhitm/memfs"
+	"unsafe"
 )
 
 type TBigShortArray [0x1FFFFFFFFFFFF]uint16
@@ -14,7 +14,7 @@ type TLexemType uint
 const (
 	ltUnknown = iota
 	ltEOF
-	ltNumber       // 12, 0x3F, 0b1101, 0377
+	ltNumber       // 12
 	ltString       // "test"
 	ltChar         // 'a' 'x' '%'
 	ltSymbol       // ! @ # $ % ^ & * () - + = [] {} и т.д.
@@ -64,13 +64,13 @@ func BuildLexems(text memfs.PBigByteArray, size uint64) PLexem {
 	var startIdx uint64
 
 	var T PBigShortArray = nil
-	
+
 	if text[0] == 0xFF && text[1] == 0xFE {
 		// типа Unicode
 		T = PBigShortArray(unsafe.Pointer(text))
 		size = (size - 2) / 2
 	}
-	
+
 	addrOfText := uint64(uintptr(unsafe.Pointer(T)))
 
 	curLexem = new(TLexem)
@@ -89,12 +89,24 @@ func BuildLexems(text memfs.PBigByteArray, size uint64) PLexem {
 				}
 				curLexem.Size = int(idx - startIdx)
 			}
+
+		case isDigit(C):
+			{
+				startIdx = idx
+				curLexem = createNewLexem(curLexem, addrOfText+idx*2, ltNumber)
+				idx++
+				for idx < size && isDigit(T[idx]) {
+					idx++
+				}
+				curLexem.Size = int(idx - startIdx)
+			}
+			
 		default:
 			idx++
 		}
 	}
-	
+
 	createNewLexem(curLexem, 0, ltEOF)
-	
+
 	return firstLexem
 }
