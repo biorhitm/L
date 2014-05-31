@@ -45,6 +45,13 @@ func isDigit(C uint16) bool {
 	return '0' <= C && C <= '9'
 }
 
+func isSymbol(C uint16) bool {
+	return ('!' <= C && C <= '/') ||
+		(':' <= C && C <= '@') ||
+		('[' <= C && C <= '`') ||
+		('{' <= C && C <= '~')
+}
+
 func createNewLexem(parent PLexem, text uint64, _type TLexemType) PLexem {
 	L := new(TLexem)
 	L.Text = PBigShortArray(unsafe.Pointer(uintptr(text)))
@@ -136,6 +143,13 @@ func BuildLexems(text memfs.PBigByteArray, size uint64) (lexem PLexem, errorCode
 				curLexem = createNewLexem(curLexem, addrOfText+(idx+1)*2, ltChar)
 				curLexem.Size = 1
 				idx += 3
+			}
+
+		case isSymbol(C):
+			{
+				curLexem = createNewLexem(curLexem, addrOfText+idx*2, ltSymbol)
+				curLexem.Size = 1
+				idx++
 			}
 
 		default:
