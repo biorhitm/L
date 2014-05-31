@@ -61,6 +61,7 @@ func createNewLexem(parent PLexem, text uint64, _type TLexemType) PLexem {
 const (
 	errNoSuccess = iota
 	errNoUnterminatedString
+	errNoUnterminatedChar
 )
 
 func BuildLexems(text memfs.PBigByteArray, size uint64) (lexem PLexem, errorCode uint, errorIndex uint64) {
@@ -125,6 +126,16 @@ func BuildLexems(text memfs.PBigByteArray, size uint64) (lexem PLexem, errorCode
 				curLexem = createNewLexem(curLexem, addrOfText+startIdx*2, ltString)
 				curLexem.Size = int(idx - startIdx)
 				idx++
+			}
+
+		case C == 0x27: //single quote
+			{
+				if (idx+2 > size) || (T[idx+2] != 0x27) {
+					return firstLexem, errNoUnterminatedChar, idx
+				}
+				curLexem = createNewLexem(curLexem, addrOfText+(idx+1)*2, ltChar)
+				curLexem.Size = 1
+				idx += 3
 			}
 
 		default:
