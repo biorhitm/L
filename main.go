@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/biorhitm/memfs"
-	"syscall"
+	"github.com/biorhitm/lsa"
 )
 
 /*
@@ -22,30 +22,14 @@ func main() {
 	}
 
 	p := mapIntf.BaseAddress()
-	lexem, errorCode, errorIndex := BuildLexems(p, mapIntf.GetSize())
+	lexem, errorCode, errorIndex := lsa.BuildLexems(p, mapIntf.GetSize())
 
 	L := lexem
-	var prevLexemType TLexemType = ltUnknown
 
 	for L != nil {
-		var S string
 		if L.Size > 0 {
-			b := make([]uint16, L.Size)
-			for i := 0; i < L.Size; i++ {
-				b[i] = L.Text[i]
-			}
-			S = syscall.UTF16ToString(b)
-			if prevLexemType != ltUnknown && prevLexemType != ltEOL {
-				//fmt.Printf(" ")
-			}
-			fmt.Printf("Лехема: %d size: %d %s ", L.Type, L.Size, S)
+			fmt.Printf("Лехема: %d size: %d %s\n", L.Type, L.Size, (*L).LexemAsString())
 		}
-
-		if L.Type == ltEOL {
-			fmt.Printf(" \\n\n")
-		}
-
-		prevLexemType = L.Type
 		L = L.Next
 	}
 
